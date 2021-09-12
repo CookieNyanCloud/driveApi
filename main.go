@@ -4,14 +4,23 @@ import (
 	"context"
 	"fmt"
 	"github.com/CookieNyanCloud/driveApi/api"
+	"github.com/CookieNyanCloud/driveApi/service"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
-	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 )
+
+const configsDir = "configs"
+
+type input struct {
+	Name string `json:"name"`
+}
 
 func main() {
 	ctx := context.Background()
@@ -19,74 +28,60 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
-
 	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b,
-		//drive.DriveScope,
-		//drive.DriveAppdataScope,
-		//drive.DriveFileScope,
-		//drive.DriveMetadataScope,
-		//drive.DriveMetadataReadonlyScope,
-		//drive.DrivePhotosReadonlyScope,
+	configD, err := google.ConfigFromJSON(b,
 		drive.DriveReadonlyScope,
-		//drive.DriveScriptsScope,
 	)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
-	client := api.GetClient(config)
+	client := api.GetClient(configD)
 	srv, err := drive.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		log.Fatalf("Unable to retrieve Drive client: %v", err)
-	}
-	name := "рашкин"
-	if err = GetPhoto(srv, name); err != nil {
 
-	}
 
-}
-
-func GetPhoto(srv *drive.Service, name string) error {
-	query := `name contains '` + name + "'"
-	r, err := srv.Files.
-		List().
-		PageSize(20).
-		Fields("nextPageToken, files(id, name)").
-		IncludeItemsFromAllDrives(true).
-		//Corpora("drive").
-		SupportsAllDrives(true).
-		Q(query).
-		IncludePermissionsForView("published").
-		Do()
-	if err != nil {
-		log.Fatalf("Unable to retrieve files: %v", err)
-	}
-	fmt.Println("Files:")
-	if len(r.Files) == 0 {
-		fmt.Println("No files found.")
-	} else {
-		for _, i := range r.Files {
-			fmt.Printf("%s (%s))\n", i.Name, i.Id)
+	server:= gin.Default()
+	server.GET("/getphoto", func(c *gin.Context) {
+		var inp input
+		if err := c.ShouldBindJSON(&inp); err != nil {
+			newResponse(c, http.StatusBadRequest, err.Error())
+			return
 		}
+		names ,err:=service.GetPhoto(srv,inp.Name)
+		if err!= nil {
+			newResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		fmt.Println(len(names))
+		for i, name:= range names{
+			fmt.Println(i,":",name)
+		}
+		if len(names)==0 {
+			newResponse(c, http.StatusOK, "нет фото")
+			return
+		} else if len(names) == 1 {
+			c.File(names[0])
+		} else {
+			output := "done.zip"
+			if err := ZipFiles(output, names); err != nil {
+				newResponse(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+			c.File(output)
+		}
+
+	})
+	err = godotenv.Load(".env")
+	if err!=nil {
+		println(err.Error())
+		return
+	}
+	port:= os.Getenv("HTTP_PORT")
+	if err:=server.Run(":"+port); err!=nil {
+		println(err.Error())
+		return
 	}
 
-	res, err := srv.Files.Get(r.Files[0].Id).Download()
-
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return err
-	}
-	fileNew, err := os.Create("new.jpeg")
-	if err != nil {
-		return err
-	}
-	defer fileNew.Close()
-	_, err = io.Copy(fileNew, res.Body)
-	if err != nil {
-		return err
-	}
-	return nil
 }
+
+
+
