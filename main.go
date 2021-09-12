@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/CookieNyanCloud/driveApi/api"
+	"github.com/CookieNyanCloud/driveApi/arch"
+	"github.com/CookieNyanCloud/driveApi/response"
 	"github.com/CookieNyanCloud/driveApi/service"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -43,30 +45,46 @@ func main() {
 	server.GET("/getphoto", func(c *gin.Context) {
 		var inp input
 		if err := c.ShouldBindJSON(&inp); err != nil {
-			newResponse(c, http.StatusBadRequest, err.Error())
+			response.NewResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
 		names ,err:=service.GetPhoto(srv,inp.Name)
 		if err!= nil {
-			newResponse(c, http.StatusInternalServerError, err.Error())
+			response.NewResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
-		fmt.Println(len(names))
 		for i, name:= range names{
 			fmt.Println(i,":",name)
 		}
 		if len(names)==0 {
-			newResponse(c, http.StatusOK, "нет фото")
+			response.NewResponse(c, http.StatusOK, "нет фото")
 			return
 		} else if len(names) == 1 {
 			c.File(names[0])
+			defer myDelete(names[0])
+			return
 		} else {
 			output := "done.zip"
-			if err := ZipFiles(output, names); err != nil {
-				newResponse(c, http.StatusInternalServerError, err.Error())
+			if err := arch.ZipFiles(output, names); err != nil {
+				response.NewResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
 			c.File(output)
+			defer func() {
+				err:=myDelete(output)
+				if err!= nil{
+					response.NewResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}()
+			defer func() {
+				err:=allDelete(names)
+				if err!= nil{
+					response.NewResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}()
+			return
 		}
 
 	})
@@ -83,5 +101,19 @@ func main() {
 
 }
 
+func myDelete(name string)error {
+	return os.Remove(name)
+}
+
+func allDelete(names []string) error {
+	for _, v := range names{
+		fmt.Println(v)
+		err:= os.Remove(v)
+		if err!= nil {
+			return err
+		}
+	}
+	return nil
+}
 
 
