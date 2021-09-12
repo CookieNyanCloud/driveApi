@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"io"
+	"os"
 )
 
 func ZipFiles(filename string, files []string) error {
