@@ -18,8 +18,6 @@ import (
 	"os"
 )
 
-const configsDir = "configs"
-
 type input struct {
 	Name string `json:"name"`
 }
@@ -42,7 +40,7 @@ func main() {
 
 
 	server:= gin.Default()
-	server.GET("/getphoto", func(c *gin.Context) {
+	server.POST("/getphoto", func(c *gin.Context) {
 		var inp input
 		if err := c.ShouldBindJSON(&inp); err != nil {
 			response.NewResponse(c, http.StatusBadRequest, err.Error())
