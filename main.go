@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/CookieNyanCloud/driveApi/api"
 	"github.com/CookieNyanCloud/driveApi/arch"
 	"github.com/CookieNyanCloud/driveApi/response"
@@ -11,10 +16,6 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
 )
 
 type input struct {
@@ -62,9 +63,9 @@ func main() {
 			return
 		} else {
 			output := "done.zip"
-				fmt.Println("221")
-				fmt.Println(names)
-				fmt.Println("222")
+			fmt.Println("221")
+			fmt.Println(names)
+			fmt.Println("222")
 
 			if err := arch.ZipFiles(output, names); err != nil {
 				fmt.Println("22")
@@ -96,6 +97,9 @@ func main() {
 	//	return
 	//}
 	port := os.Getenv("HTTP_PORT")
+	fmt.Println("1")
+	fmt.Println(port)
+	fmt.Println("2")
 	if err := server.Run(":" + port); err != nil {
 		println(err.Error())
 		return

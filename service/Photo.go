@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"sync"
 )
 
 func GetPhoto(srv *drive.Service, name string) ([]string, error) {
@@ -26,30 +25,21 @@ func GetPhoto(srv *drive.Service, name string) ([]string, error) {
 	}
 	fmt.Println("Files:")
 	println(len(r.Files))
-	fileslist:= make([]string, len(r.Files))
+	fileslist := make([]string, len(r.Files))
 	if len(r.Files) == 0 {
 		fmt.Println("No files found.")
 	} else {
-		var wg sync.WaitGroup
-		var mu sync.Mutex
-
 		for j, i := range r.Files {
 			fmt.Printf("%s (%s))\n", i.Name, i.Id)
 			//fileslist = append(fileslist,i.Name)
-			fileslist[j]= i.Name
-			wg.Add(1)
-
-			go func() {
-				mu.Lock()
-				err = load(srv, i)
-				mu.Unlock()
-				wg.Done()
-			}()
-
+			fileslist[j] = i.Name
+			err = load(srv, i)
+			if err != nil {
+				log.Fatalf("Unable to retrieve files2: %v", err)
+			}
 		}
-		wg.Wait()
 	}
-	return fileslist,nil
+	return fileslist, nil
 }
 
 func load(srv *drive.Service, r *drive.File) error {
