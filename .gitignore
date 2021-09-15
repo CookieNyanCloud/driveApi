@@ -4,3 +4,4 @@ token.json
 .env
 done.zip
 *.jpg
+.vscode

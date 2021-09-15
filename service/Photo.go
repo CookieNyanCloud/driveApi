@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 )
 
 func GetPhoto(srv *drive.Service, name string) ([]string, error) {
@@ -29,12 +30,24 @@ func GetPhoto(srv *drive.Service, name string) ([]string, error) {
 	if len(r.Files) == 0 {
 		fmt.Println("No files found.")
 	} else {
+		var wg sync.WaitGroup
+		var mu sync.Mutex
+
 		for j, i := range r.Files {
 			fmt.Printf("%s (%s))\n", i.Name, i.Id)
 			//fileslist = append(fileslist,i.Name)
 			fileslist[j]= i.Name
-			err = load(srv, i)
+			wg.Add(1)
+
+			go func() {
+				mu.Lock()
+				err = load(srv, i)
+				mu.Unlock()
+				wg.Done()
+			}()
+
 		}
+		wg.Wait()
 	}
 	return fileslist,nil
 }
@@ -58,5 +71,6 @@ func load(srv *drive.Service, r *drive.File) error {
 	if err != nil {
 		return err
 	}
+	println("asasas")
 	return nil
 }

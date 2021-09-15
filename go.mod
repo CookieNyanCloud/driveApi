@@ -6,7 +6,6 @@ require (
 	cloud.google.com/go v0.94.1 // indirect
 	github.com/gin-gonic/gin v1.7.4
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
