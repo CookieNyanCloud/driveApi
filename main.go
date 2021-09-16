@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/CookieNyanCloud/driveApi/response"
 	"github.com/CookieNyanCloud/driveApi/service"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
@@ -23,6 +25,9 @@ type input struct {
 }
 
 func main() {
+	var local bool
+	flag.BoolVar(&local, "local", false, "хост")
+	flag.Parse()
 	ctx := context.Background()
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
@@ -51,9 +56,6 @@ func main() {
 			response.NewResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
-		for i, name := range names {
-			fmt.Println(i, ":", name)
-		}
 		if len(names) == 0 {
 			response.NewResponse(c, http.StatusOK, "нет фото")
 			return
@@ -63,12 +65,7 @@ func main() {
 			return
 		} else {
 			output := "done.zip"
-			fmt.Println("221")
-			fmt.Println(names)
-			fmt.Println("222")
-
 			if err := arch.ZipFiles(output, names); err != nil {
-				fmt.Println("22")
 				response.NewResponse(c, http.StatusInternalServerError, err.Error())
 				return
 			}
@@ -89,17 +86,15 @@ func main() {
 			}()
 			return
 		}
-
 	})
-	//err = godotenv.Load(".env")
-	//if err != nil {
-	//	println(err.Error())
-	//	return
-	//}
-	port := os.Getenv("HTTP_PORT")
-	fmt.Println("1")
-	fmt.Println(port)
-	fmt.Println("2")
+	if local {
+		err = godotenv.Load(".env")
+		if err != nil {
+			println(err.Error())
+			return
+		}
+	}
+	port := os.Getenv("DRIVEAPI_PORT")
 	if err := server.Run(":" + port); err != nil {
 		println(err.Error())
 		return
