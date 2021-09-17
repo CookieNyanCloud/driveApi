@@ -43,73 +43,8 @@ func GetPhoto(srv *drive.Service, name string) ([]string, error) {
 	return fileslist, nil
 }
 
-//func loadMult(srv *drive.Service, r *drive.FileList) ([][]byte, error) {
-//	println("mult")
-//	done := make(chan []byte, len(r.Files))
-//	errch := make(chan error, len(r.Files))
-//	for _, file := range r.Files {
-//		go func(file *drive.File) {
-//			b,err := load2(srv, file)
-//			if err != nil {
-//				errch <- err
-//				done <- nil
-//				return
-//			}
-//			done <- b
-//			errch <- nil
-//			//fileslist[i] = file.Name
-//			//fmt.Println("121212",fileslist[i])
-//		}(file)
-//	}
-//	bytesArray := make([][]byte, 0)
-//	var errStr string
-//	for i := 0; i < len(r.Files); i++ {
-//		bytesArray = append(bytesArray, <-done)
-//		if err := <-errch; err != nil {
-//			errStr = errStr + " " + err.Error()
-//		}
-//	}
-//	var err error
-//	if errStr!=""{
-//		err = errors.New(errStr)
-//	}
-//	return bytesArray, err
-//	//return fileslist, nil
-//}
-//
-//func load2(srv *drive.Service, r *drive.File) ([]byte,error) {
-//	fmt.Println(r.Name)
-//	println("ld2")
-//	res, err := srv.Files.Get(r.Id).Download()
-//
-//	if err != nil {
-//		return nil,err
-//	}
-//	defer res.Body.Close()
-//	if res.StatusCode != 200 {
-//		return nil,err
-//	}
-//	var data bytes.Buffer
-//	_, err = io.Copy(&data, res.Body)
-//	if err != nil {
-//		return nil, err
-//	}
-//	println("asasas")
-//	return data.Bytes(), nil
-//
-//	//fileNew, err := os.Create(r.Name)
-//	//if err != nil {
-//	//	return err
-//	//}
-//	//defer fileNew.Close()
-//	//_, err = io.Copy(fileNew, res.Body)
-//	//if err != nil {
-//	//	return err
-//	//}
-//	//return nil
-//}
-
-func load(srv *drive.Service, r *drive.File, wg *sync.WaitGroup) (error) {
+func load(srv *drive.Service, r *drive.File, wg *sync.WaitGroup) error {
+	println(r.Name,"start")
 	res, err := srv.Files.Get(r.Id).Download()
 	if err != nil {
 		return err
@@ -128,30 +63,6 @@ func load(srv *drive.Service, r *drive.File, wg *sync.WaitGroup) (error) {
 		return err
 	}
 	wg.Done()
+	println(r.Name,"done")
 	return nil
 }
-
-//
-//
-//func load(srv *drive.Service, r *drive.File) error {
-//	res, err := srv.Files.Get(r.Id).Download()
-//
-//	if err != nil {
-//		return err
-//	}
-//	defer res.Body.Close()
-//	if res.StatusCode != 200 {
-//		return err
-//	}
-//	fileNew, err := os.Create(r.Name)
-//	if err != nil {
-//		return err
-//	}
-//	defer fileNew.Close()
-//	_, err = io.Copy(fileNew, res.Body)
-//	if err != nil {
-//		return err
-//	}
-//	println("asasas")
-//	return nil
-//}

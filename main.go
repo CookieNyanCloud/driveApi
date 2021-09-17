@@ -45,6 +45,7 @@ func main() {
 
 	server := gin.Default()
 	server.POST("/getphoto", func(c *gin.Context) {
+		println("start")
 		var inp input
 		if err := c.ShouldBindJSON(&inp); err != nil {
 			response.NewResponse(c, http.StatusBadRequest, err.Error())
@@ -99,6 +100,7 @@ func main() {
 		println(err.Error())
 		return
 	}
+		println("done")
 
 }
 
