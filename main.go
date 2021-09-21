@@ -1,14 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-
 	"github.com/CookieNyanCloud/driveApi/api"
 	"github.com/CookieNyanCloud/driveApi/arch"
 	"github.com/CookieNyanCloud/driveApi/response"
@@ -18,11 +15,18 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"time"
 )
 
 type input struct {
 	Name string `json:"name"`
 }
+
+var urlPhoto = "http://localhost:8090/getphoto"
 
 func main() {
 	var local bool
@@ -62,7 +66,13 @@ func main() {
 			return
 		} else if len(names) == 1 {
 			c.File(names[0])
-			defer myDelete(names[0])
+			defer func() {
+				err := myDelete(names[0])
+				if err != nil {
+					response.NewResponse(c, http.StatusInternalServerError, err.Error())
+					return
+				}
+			}()
 			return
 		} else {
 			output := "done.zip"
@@ -88,21 +98,14 @@ func main() {
 			return
 		}
 	})
-	if local {
-		err = godotenv.Load(".env")
-		if err != nil {
-			println(err.Error())
-			return
-		}
-	}
-	port := os.Getenv("DRIVEAPI_PORT")
+	revokeForSure()
+	port := envVar(local,server)
 	if err := server.Run(":" + port); err != nil {
 		println(err.Error())
-		return
 	}
-		println("done")
-
+	println("done")
 }
+
 
 func myDelete(name string) error {
 	return os.Remove(name)
@@ -117,4 +120,42 @@ func allDelete(names []string) error {
 		}
 	}
 	return nil
+}
+
+func revokeForSure()  {
+	ticker := time.NewTicker(72 * time.Hour)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				postBody, _ := json.Marshal(map[string]string{
+					"name":  "111111111",
+				})
+				responseBody := bytes.NewBuffer(postBody)
+				resp, err := http.Post(urlPhoto, "application/json", responseBody)
+				if err != nil {
+					fmt.Println(err.Error())
+				}
+				if err = resp.Body.Close(); err != nil {
+					fmt.Println(err.Error())
+
+				}
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+}
+
+func envVar(local bool, server *gin.Engine) string{
+	if local {
+		err := godotenv.Load(".env")
+		if err != nil {
+			println(err.Error())
+			return ""
+		}
+	}
+	return os.Getenv("DRIVEAPI_PORT")
 }
