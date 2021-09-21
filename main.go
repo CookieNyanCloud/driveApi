@@ -4,6 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+
 	"github.com/CookieNyanCloud/driveApi/arch"
 	"github.com/CookieNyanCloud/driveApi/response"
 	"github.com/CookieNyanCloud/driveApi/service"
@@ -11,9 +15,6 @@ import (
 	"github.com/joho/godotenv"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
-	"log"
-	"net/http"
-	"os"
 )
 
 type input struct {
@@ -24,13 +25,12 @@ const (
 	credFile = "driveapisearch-d732c8783d2b.json"
 )
 
-
 func main() {
 
 	var local bool
 	flag.BoolVar(&local, "local", false, "хост")
 	flag.Parse()
-	port:= envVar(local)
+	port := envVar(local)
 
 	ctx := context.Background()
 
@@ -92,22 +92,22 @@ func main() {
 		}
 	})
 	server.POST("/sendphoto", func(c *gin.Context) {
-		author:= c.DefaultQuery("author","SOTA")
+		author := c.DefaultQuery("author", "SOTA")
 		photo, err := c.FormFile("photo")
-		if err!= nil {
+		if err != nil {
 			println("1")
 			response.NewResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		fmt.Println(author,photo.Filename)
-		err = c.SaveUploadedFile(photo,"")
-		if err!= nil {
+		fmt.Println(author, photo.Filename)
+		err = c.SaveUploadedFile(photo, "")
+		if err != nil {
 			println("2")
 			response.NewResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
-		err = service.SendPhoto(srv,photo.Filename)
-		if err!= nil {
+		err = service.SendPhoto(srv, photo.Filename)
+		if err != nil {
 			println("3")
 			response.NewResponse(c, http.StatusInternalServerError, err.Error())
 			return
