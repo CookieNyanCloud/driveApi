@@ -43,6 +43,11 @@ func GetPhoto(srv *drive.Service, name string) ([]string, error) {
 	return fileslist, nil
 }
 
+func SendPhoto(srv *drive.Service, name string) error {
+	return nil
+}
+
+
 func load(srv *drive.Service, r *drive.File, wg *sync.WaitGroup) error {
 	println(r.Name,"start")
 	res, err := srv.Files.Get(r.Id).Download()

@@ -1,55 +1,48 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/CookieNyanCloud/driveApi/api"
 	"github.com/CookieNyanCloud/driveApi/arch"
 	"github.com/CookieNyanCloud/driveApi/response"
 	"github.com/CookieNyanCloud/driveApi/service"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 type input struct {
 	Name string `json:"name"`
 }
 
-var urlPhoto = "http://localhost:8090/getphoto"
+const (
+	credFile = "driveapisearch-d732c8783d2b.json"
+)
+
 
 func main() {
+
 	var local bool
 	flag.BoolVar(&local, "local", false, "хост")
 	flag.Parse()
+	port:= envVar(local)
+
 	ctx := context.Background()
-	b, err := ioutil.ReadFile("credentials.json")
+
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile(credFile))
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		log.Fatalf("Unable to parse credantials file: %v", err)
 	}
-	// If modifying these scopes, delete your previously saved token.json.
-	configD, err := google.ConfigFromJSON(b,
-		drive.DriveReadonlyScope,
-	)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-	client := api.GetClient(configD)
-	srv, err := drive.NewService(ctx, option.WithHTTPClient(client))
 
 	server := gin.Default()
 	server.POST("/getphoto", func(c *gin.Context) {
 		println("start")
+
 		var inp input
 		if err := c.ShouldBindJSON(&inp); err != nil {
 			response.NewResponse(c, http.StatusBadRequest, err.Error())
@@ -67,7 +60,7 @@ func main() {
 		} else if len(names) == 1 {
 			c.File(names[0])
 			defer func() {
-				err := myDelete(names[0])
+				err := arch.MyDelete(names[0])
 				if err != nil {
 					response.NewResponse(c, http.StatusInternalServerError, err.Error())
 					return
@@ -82,14 +75,14 @@ func main() {
 			}
 			c.File(output)
 			defer func() {
-				err := myDelete(output)
+				err := arch.MyDelete(output)
 				if err != nil {
 					response.NewResponse(c, http.StatusInternalServerError, err.Error())
 					return
 				}
 			}()
 			defer func() {
-				err := allDelete(names)
+				err := arch.AllDelete(names)
 				if err != nil {
 					response.NewResponse(c, http.StatusInternalServerError, err.Error())
 					return
@@ -98,58 +91,45 @@ func main() {
 			return
 		}
 	})
-	revokeForSure()
-	port := envVar(local,server)
+	server.POST("/sendphoto", func(c *gin.Context) {
+		author:= c.DefaultQuery("author","SOTA")
+		photo, err := c.FormFile("photo")
+		if err!= nil {
+			println("1")
+			response.NewResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		fmt.Println(author,photo.Filename)
+		err = c.SaveUploadedFile(photo,"")
+		if err!= nil {
+			println("2")
+			response.NewResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		err = service.SendPhoto(srv,photo.Filename)
+		if err!= nil {
+			println("3")
+			response.NewResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		//defer func(name string) {
+		//	err := arch.MyDelete(name)
+		//	if err != nil {
+		//		response.NewResponse(c, http.StatusInternalServerError, err.Error())
+		//		return
+		//	}
+		//}(photo.Filename)
+		c.String(http.StatusOK, fmt.Sprintf("'%s by %s' uploaded!", photo.Filename, author))
+
+	})
+
 	if err := server.Run(":" + port); err != nil {
 		println(err.Error())
 	}
 	println("done")
 }
 
-
-func myDelete(name string) error {
-	return os.Remove(name)
-}
-
-func allDelete(names []string) error {
-	for _, v := range names {
-		fmt.Println(v)
-		err := os.Remove(v)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func revokeForSure()  {
-	ticker := time.NewTicker(72 * time.Hour)
-	quit := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				postBody, _ := json.Marshal(map[string]string{
-					"name":  "111111111",
-				})
-				responseBody := bytes.NewBuffer(postBody)
-				resp, err := http.Post(urlPhoto, "application/json", responseBody)
-				if err != nil {
-					fmt.Println(err.Error())
-				}
-				if err = resp.Body.Close(); err != nil {
-					fmt.Println(err.Error())
-
-				}
-			case <-quit:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-}
-
-func envVar(local bool, server *gin.Engine) string{
+func envVar(local bool) string {
 	if local {
 		err := godotenv.Load(".env")
 		if err != nil {

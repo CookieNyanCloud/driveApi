@@ -1,8 +1,4 @@
-credentials.json
-token.json
-token1.json
-.idea
-.env
+*.json
+.*
 done.zip
 *.jpg
-.vscode
