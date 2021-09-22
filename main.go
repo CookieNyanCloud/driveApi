@@ -22,7 +22,7 @@ type input struct {
 }
 
 const (
-	credFile = "driveapisearch-d732c8783d2b.json"
+	credFile = "driveapisearch.json"
 )
 
 func main() {
