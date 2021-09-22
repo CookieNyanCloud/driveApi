@@ -93,25 +93,33 @@ func main() {
 	})
 	server.POST("/sendphoto", func(c *gin.Context) {
 		author := c.DefaultQuery("author", "SOTA")
-		photo, err := c.FormFile("photo")
+		println(author)
+		file,err:=c.GetRawData()
+		//file, err := ioutil.ReadAll(c.Request.Body)
+		if err != nil {
+			println("2")
+			response.NewResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		f, err := os.Create("data")
 		if err != nil {
 			println("1")
 			response.NewResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		fmt.Println(author, photo.Filename)
-		err = c.SaveUploadedFile(photo, "")
-		if err != nil {
-			println("2")
-			response.NewResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-		err = service.SendPhoto(srv, photo.Filename)
-		if err != nil {
-			println("3")
-			response.NewResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
+		defer f.Close()
+		f.Write(file)
+		//err = c.SaveUploadedFile(photo, "")
+		//if err != nil {
+		//	response.NewResponse(c, http.StatusInternalServerError, err.Error())
+		//	return
+		//}
+		//err = service.SendPhoto(srv, photo.Filename)
+		//if err != nil {
+		//	println("3")
+		//	response.NewResponse(c, http.StatusInternalServerError, err.Error())
+		//	return
+		//}
 		//defer func(name string) {
 		//	err := arch.MyDelete(name)
 		//	if err != nil {
@@ -119,7 +127,7 @@ func main() {
 		//		return
 		//	}
 		//}(photo.Filename)
-		c.String(http.StatusOK, fmt.Sprintf("'%s by %s' uploaded!", photo.Filename, author))
+		//c.String(http.StatusOK, fmt.Sprintf("'%s by %s' uploaded!", photo.Filename, author))
 
 	})
 
