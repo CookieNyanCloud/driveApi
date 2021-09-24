@@ -24,14 +24,12 @@ type input struct {
 const (
 	credFile = "driveapisearch.json"
 )
-
 func main() {
 
 	var local bool
 	flag.BoolVar(&local, "local", false, "хост")
 	flag.Parse()
-	port := envVar(local)
-
+	port, drivePeople, driveZag := envVar(local)
 	ctx := context.Background()
 
 	srv, err := drive.NewService(ctx, option.WithCredentialsFile(credFile))
@@ -40,6 +38,7 @@ func main() {
 	}
 
 	server := gin.Default()
+	server.MaxMultipartMemory = 8 << 25
 	server.POST("/getphoto", func(c *gin.Context) {
 		println("start")
 
@@ -92,43 +91,21 @@ func main() {
 		}
 	})
 	server.POST("/sendphoto", func(c *gin.Context) {
-		author := c.DefaultQuery("author", "SOTA")
-		println(author)
-		file,err:=c.GetRawData()
-		//file, err := ioutil.ReadAll(c.Request.Body)
+		file, err := c.FormFile("file")
 		if err != nil {
-			println("2")
 			response.NewResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		f, err := os.Create("data")
-		if err != nil {
-			println("1")
+		if err = c.SaveUploadedFile(file, file.Filename); err != nil {
 			response.NewResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
-		defer f.Close()
-		f.Write(file)
-		//err = c.SaveUploadedFile(photo, "")
-		//if err != nil {
-		//	response.NewResponse(c, http.StatusInternalServerError, err.Error())
-		//	return
-		//}
-		//err = service.SendPhoto(srv, photo.Filename)
-		//if err != nil {
-		//	println("3")
-		//	response.NewResponse(c, http.StatusInternalServerError, err.Error())
-		//	return
-		//}
-		//defer func(name string) {
-		//	err := arch.MyDelete(name)
-		//	if err != nil {
-		//		response.NewResponse(c, http.StatusInternalServerError, err.Error())
-		//		return
-		//	}
-		//}(photo.Filename)
-		//c.String(http.StatusOK, fmt.Sprintf("'%s by %s' uploaded!", photo.Filename, author))
 
+		dirType:= c.PostForm("dirType")
+		author:= c.PostForm("author")
+		err = service.SendPhoto(srv, file.Filename, author,dirType,drivePeople, driveZag)
+
+		c.String(http.StatusOK, fmt.Sprintf("file uploaded!"))
 	})
 
 	if err := server.Run(":" + port); err != nil {
@@ -137,13 +114,13 @@ func main() {
 	println("done")
 }
 
-func envVar(local bool) string {
+func envVar(local bool) (string, string, string) {
 	if local {
 		err := godotenv.Load(".env")
 		if err != nil {
 			println(err.Error())
-			return ""
+			return "", "", ""
 		}
 	}
-	return os.Getenv("DRIVEAPI_PORT")
+	return os.Getenv("DRIVEAPI_PORT"), os.Getenv("DRIVE_PEOPLE"), os.Getenv("DRIVE_ZAG")
 }

@@ -14,7 +14,7 @@ func GetPhoto(srv *drive.Service, name string) ([]string, error) {
 	r, err := srv.Files.
 		List().
 		PageSize(20).
-		Fields("nextPageToken, files(id, name)").
+		Fields("nextPageToken, files(id, name, parents)").
 		IncludeItemsFromAllDrives(true).
 		SupportsAllDrives(true).
 		Q(query).
@@ -43,7 +43,36 @@ func GetPhoto(srv *drive.Service, name string) ([]string, error) {
 	return fileslist, nil
 }
 
-func SendPhoto(srv *drive.Service, name string) error {
+func SendPhoto(srv *drive.Service, name,author, dirType,drivePeople, driveZag string) error {
+	src, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	fl:= &drive.File{}
+	fl.Name = name
+	fl.MimeType = "image/jpeg"
+	fl.Description = "автор:"+author
+	var folder string
+	switch dirType {
+	case "з":
+		folder =driveZag
+	case "л":
+		folder = drivePeople
+	default:
+		folder = drivePeople
+	}
+	fs:=make([]string,1)
+	fs[0] = folder
+	fl.Parents = fs
+	file, err:= srv.
+		Files.
+		Create(fl).
+		SupportsAllDrives(true).
+		SupportsTeamDrives(true).
+		Media(src).
+		Do()
+	fmt.Println(file.Name)
 	return nil
 }
 
