@@ -16,7 +16,6 @@ func GetPhoto(srv *drive.Service, name string) ([]string, error) {
 	if err != nil {
 		log.Fatalf("Unable to retrieve files: %v", err)
 	}
-	fmt.Println(r.Files[0].Parents)
 	fileslist := make([]string, len(r.Files))
 	if len(r.Files) == 0 {
 		fmt.Println("No files found.")

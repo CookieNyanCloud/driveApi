@@ -29,7 +29,7 @@ func envVar(local bool) *Conf {
 	}
 	return &Conf{
 		os.Getenv("DRIVEAPI_PORT"),
-		os.Getenv("DRIVE_PEOPLE"),
-		os.Getenv("DRIVE_ZAG"),
+		os.Getenv("DRIVEAPI_PEOPLE"),
+		os.Getenv("DRIVEAPI_ZAG"),
 	}
 }
