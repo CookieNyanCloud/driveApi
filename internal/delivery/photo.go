@@ -20,6 +20,10 @@ func (h *Handler) getPhoto(c *gin.Context) {
 		response.NewResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	if len(inp.Name) <3 {
+		response.NewResponse(c, http.StatusOK, "слишком широкая выборка")
+		return
+	}
 	names, err := service.GetPhoto(h.drive, inp.Name)
 	fmt.Println(names)
 	if err != nil {
@@ -65,6 +69,8 @@ func (h *Handler) getPhoto(c *gin.Context) {
 }
 
 func (h *Handler) sendPhoto(c *gin.Context) {
+	dirType := c.PostForm("dirType")
+	//dirType := c.Query("dirType")
 	file, err := c.FormFile("file")
 	if err != nil {
 		response.NewResponse(c, http.StatusBadRequest, err.Error())
@@ -75,7 +81,6 @@ func (h *Handler) sendPhoto(c *gin.Context) {
 		return
 	}
 
-	dirType := c.PostForm("dirType")
 	//author := c.PostForm("author")
 	err = service.SendPhoto(h.drive, file.Filename, dirType, h.conf.DrivePeople, h.conf.DriveZag)
 	if err = arch.MyDelete(file.Filename); err != nil {

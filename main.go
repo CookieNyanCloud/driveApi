@@ -17,13 +17,9 @@ import (
 	"google.golang.org/api/option"
 )
 
-
-
 const (
 	credFile = "driveapisearch.json"
 )
-
-
 
 func main() {
 	conf := config.InitConf()
