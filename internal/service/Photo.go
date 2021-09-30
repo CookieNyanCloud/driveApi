@@ -12,9 +12,6 @@ import (
 )
 
 func GetPhoto(srv *drive.Service, name string) ([]string, error) {
-	if len(name) <3 {
-		return []string{},nil
-	}
 	r, err := findPhoto(srv, name)
 	if err != nil {
 		log.Fatalf("Unable to retrieve files: %v", err)
