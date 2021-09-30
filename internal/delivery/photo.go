@@ -7,7 +7,6 @@ import (
 	"github.com/CookieNyanCloud/driveApi/pkg/response"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strings"
 )
 
 type input struct {
@@ -22,7 +21,7 @@ func (h *Handler) getPhoto(c *gin.Context) {
 		return
 	}
 	println(len(inp.Name))
-	if len(inp.Name) <7 || strings.Contains(inp.Name,"."){
+	if len(inp.Name) <7 {
 		response.NewResponse(c, http.StatusOK, "слишком широкая выборка")
 		return
 	}
