@@ -42,9 +42,9 @@ func SendPhoto(srv *drive.Service, name, dirType, drivePeople, driveZag string) 
 	if err != nil {
 		log.Fatalf("Unable to retrieve files: %v", err)
 	}
-	fmt.Println(r.Files[0].DriveId)
-	fmt.Println(r.Files[0].Parents)
-	println(len(r.Files))
+	//fmt.Println(r.Files[0].DriveId)
+	//fmt.Println(r.Files[0].Parents)
+	//println(len(r.Files))
 	newname := name
 	num := strconv.Itoa(len(r.Files) + 1)
 	newname = data[0] + " " + num + "." + data[1]
