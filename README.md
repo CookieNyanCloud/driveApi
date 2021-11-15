@@ -1,4 +1,4 @@
-[![GoReportCard](https://goreportcard.com/badge/github.com/cookienyancloud/driveapi)](https://goreportcard.com/report/github.com/cookienyancloud/driveapi)
+[![Go Report Card](https://goreportcard.com/badge/github.com/cookienyancloud/driveapi)](https://goreportcard.com/report/github.com/cookienyancloud/driveapi)
 # Сервис взаимодействия с фотографиеми через google drive api
 ## Запуск
 - запуск локальный (-local) или через Docker
