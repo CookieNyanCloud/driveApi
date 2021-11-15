@@ -16,8 +16,8 @@ func NewServer(cfg *config.Conf, handler http.Handler) *Server {
 		httpServer: &http.Server{
 			Addr:           ":" + cfg.Port,
 			Handler:        handler,
-			ReadTimeout:    time.Second*200,
-			WriteTimeout:   time.Second*120,
+			ReadTimeout:    time.Second * 200,
+			WriteTimeout:   time.Second * 120,
 			MaxHeaderBytes: 8 << 26,
 		},
 	}

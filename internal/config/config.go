@@ -12,7 +12,7 @@ type Conf struct {
 	DriveZag    string
 }
 
-func InitConf() *Conf  {
+func InitConf() *Conf {
 	var local bool
 	flag.BoolVar(&local, "local", false, "хост")
 	flag.Parse()

@@ -9,7 +9,7 @@ import (
 )
 
 func ZipFiles(filename string, files []string) error {
-	start:= time.Now()
+	start := time.Now()
 	newZipFile, err := os.Create(filename)
 	if err != nil {
 		return err

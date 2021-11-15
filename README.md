@@ -1,3 +1,4 @@
+[![GoReportCard](https://goreportcard.com/badge/github.com/cookienyancloud/driveApi)](https://goreportcard.com/report/github.com/cookienyancloud/driveapi)
 # Сервис взаимодействия с фотографиеми через google drive api
 
 ## Запуск

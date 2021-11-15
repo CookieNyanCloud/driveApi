@@ -21,7 +21,7 @@ func (h *Handler) getPhoto(c *gin.Context) {
 		return
 	}
 	println(len(inp.Name))
-	if len(inp.Name) <7 {
+	if len(inp.Name) < 7 {
 		response.NewResponse(c, http.StatusOK, "слишком широкая выборка")
 		return
 	}
